@@ -1,0 +1,40 @@
+# ─── Core AI / LLM ────────────────────────────────────────────
+groq>=0.9.0
+google-generativeai>=0.8.6
+
+# ─── Speech-to-Text (local, no API cost) ──────────────────────
+faster-whisper>=1.0.0
+
+# ─── Audio I/O ────────────────────────────────────────────────
+sounddevice>=0.4.6
+soundfile>=0.12.1
+numpy>=1.24.0
+miniaudio>=1.8
+
+# ─── Text-to-Speech ───────────────────────────────────────────
+edge-tts>=6.1.9
+
+# ─── OS Automation ────────────────────────────────────────────
+pyautogui>=0.9.54
+pywin32>=306
+psutil>=5.9.0
+keyboard>=0.13.5
+pycaw>=20230407
+comtypes>=1.2.0
+screen-brightness-control>=0.23.0
+
+# ─── Web / Data ───────────────────────────────────────────────
+requests>=2.31.0
+
+# ─── Dashboard API Server ─────────────────────────────────────
+fastapi>=0.111.0
+uvicorn>=0.30.0
+websockets>=12.0
+
+# ─── System Tray ──────────────────────────────────────────────
+pystray>=0.19.5
+Pillow>=10.0.0
+
+# ─── Wake Word (Optional — Phase 3) ──────────────────────────
+# pvporcupine>=3.0.0       # Uncomment if you have a Picovoice key
+# openwakeword>=0.6.0      # Open-source alternative
