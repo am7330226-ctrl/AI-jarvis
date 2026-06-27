@@ -100,6 +100,17 @@ class PorcupineListener:
         self.on_trigger = on_trigger
         self._stop_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
+        
+        # Fail fast if dependencies are missing
+        # pyrefly: ignore [missing-import]
+        import pvporcupine
+        # pyrefly: ignore [missing-import]
+        import sounddevice as sd
+        # pyrefly: ignore [missing-import]
+        import numpy as np
+        from backend.config import PORCUPINE_ACCESS_KEY
+        if not PORCUPINE_ACCESS_KEY:
+            raise ValueError("PORCUPINE_ACCESS_KEY is not set.")
 
     def start(self):
         self._stop_event.clear()
@@ -117,14 +128,13 @@ class PorcupineListener:
             self._thread.join(timeout=3.0)
 
     def _run(self):
-        try:
-            import pvporcupine
-            import sounddevice as sd
-            import numpy as np
-            from backend.config import PORCUPINE_ACCESS_KEY
-        except ImportError as e:
-            logger.error(f"Porcupine dependencies missing: {e}. Falling back to hotkey mode.")
-            return
+        # pyrefly: ignore [missing-import]
+        import pvporcupine
+        # pyrefly: ignore [missing-import]
+        import sounddevice as sd
+        # pyrefly: ignore [missing-import]
+        import numpy as np
+        from backend.config import PORCUPINE_ACCESS_KEY
 
         try:
             porcupine = pvporcupine.create(
@@ -175,6 +185,14 @@ class OpenWakeWordListener:
         self.threshold = threshold
         self._stop_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
+        
+        # Fail fast if dependencies are missing
+        # pyrefly: ignore [missing-import]
+        from openwakeword.model import Model
+        # pyrefly: ignore [missing-import]
+        import sounddevice as sd
+        # pyrefly: ignore [missing-import]
+        import numpy as np
 
     def start(self):
         """Start the wake word listener in a background thread."""
@@ -199,13 +217,12 @@ class OpenWakeWordListener:
         logger.info("OpenWakeWordListener stopped.")
 
     def _run(self):
-        try:
-            from openwakeword.model import Model
-            import sounddevice as sd
-            import numpy as np
-        except ImportError as e:
-            logger.error(f"OpenWakeWord dependencies missing: {e}. Cannot run wake-word.")
-            return
+        # pyrefly: ignore [missing-import]
+        from openwakeword.model import Model
+        # pyrefly: ignore [missing-import]
+        import sounddevice as sd
+        # pyrefly: ignore [missing-import]
+        import numpy as np
 
         try:
             # Initialize model with ONNX engine

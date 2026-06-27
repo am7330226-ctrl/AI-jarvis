@@ -7,10 +7,14 @@ Maintains multi-turn conversation history for contextual responses.
 """
 
 import logging
-from typing import Callable, Optional, Any
+from typing import Callable, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backend.tools.executor import ToolExecutor
 
 import google.generativeai as genai
-from google.generativeai.types import FunctionDeclaration, Tool, content_types
+from google.generativeai.types import FunctionDeclaration, Tool
+import google.api_core.exceptions
 
 from backend.config import (
     GEMINI_API_KEY,
@@ -27,11 +31,11 @@ TOOL_DECLARATIONS = [
     # ── App Control ──
     FunctionDeclaration(
         name="open_application",
-        description="Launch or open an application on the user's computer.",
+        description="Launch or open an application, file, document, or folder path on the user's computer.",
         parameters={
             "type": "object",
             "properties": {
-                "name": {"type": "string", "description": "The name of the application to open (e.g., 'Chrome', 'Notepad', 'Spotify')."}
+                "name": {"type": "string", "description": "The name of the app (e.g., 'Chrome'), or an absolute file path (e.g., 'C:\\Users\\PW\\Documents\\report.pdf')."}
             },
             "required": ["name"],
         },
@@ -302,6 +306,9 @@ class GeminiBrain:
             logger.info(f"Jarvis: {final_text}")
             return final_text
 
+        except google.api_core.exceptions.ResourceExhausted:
+            logger.warning("Gemini API rate limit exceeded (429).")
+            return "Boss, API ki rate limit cross ho gayi hai. Thodi der baad try kijiye."
         except Exception as e:
             logger.error(f"Gemini API error: {e}", exc_info=True)
             return "I encountered an error communicating with my AI core. Please try again."
@@ -317,7 +324,11 @@ class GeminiBrain:
 
         if not tool_calls:
             # Pure text response
-            return response.text.strip()
+            try:
+                return response.text.strip()
+            except ValueError:
+                # Occurs if Gemini returned no parts (empty response)
+                return ""
 
         # Execute all tool calls and collect results
         tool_results = []

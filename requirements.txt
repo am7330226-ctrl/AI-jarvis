@@ -38,3 +38,4 @@ Pillow>=10.0.0
 # ─── Wake Word (Optional — Phase 3) ──────────────────────────
 # pvporcupine>=3.0.0       # Uncomment if you have a Picovoice key
 # openwakeword>=0.6.0      # Open-source alternative
+python-dotenv>=1.0.0

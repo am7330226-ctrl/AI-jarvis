@@ -1,0 +1,8 @@
+{
+    "python.defaultInterpreterPath": "c:\\Users\\PW\\.gemini\\antigravity-ide\\scratch\\jarvis\\venv\\Scripts\\python.exe",
+    "python.analysis.extraPaths": [
+        "c:\\Users\\PW\\.gemini\\antigravity-ide\\scratch\\jarvis\\venv\\Lib\\site-packages"
+    ],
+    "python.analysis.venvPath": "c:\\Users\\PW\\.gemini\\antigravity-ide\\scratch\\jarvis",
+    "python.analysis.venv": "venv"
+}

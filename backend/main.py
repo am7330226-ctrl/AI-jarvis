@@ -40,8 +40,8 @@ class Jarvis:
 
     def __init__(self):
         # Validate API key
-        if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
-            logger.error("Please set your GEMINI_API_KEY in backend/config.py before running.")
+        if not GEMINI_API_KEY or GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
+            logger.error("Please set your GEMINI_API_KEY in backend/config.py or .env before running.")
             sys.exit(1)
 
         logger.info("Initializing JARVIS systems...")
@@ -67,27 +67,31 @@ class Jarvis:
 
         # Initialize the configured trigger listener
         self.wake_word_mode = False
-        if WAKE_WORD_ENGINE == "openwakeword":
-            from backend.wake_word.listener import OpenWakeWordListener
-            logger.info("Setting up OpenWakeWord wake word listener...")
-            self.listener = OpenWakeWordListener(
-                on_trigger=self._on_trigger,
-            )
-            self.wake_word_mode = True
-        elif WAKE_WORD_ENGINE == "porcupine":
-            from backend.wake_word.listener import PorcupineListener
-            logger.info("Setting up Porcupine wake word listener...")
-            self.listener = PorcupineListener(
-                on_trigger=self._on_trigger,
-            )
-            self.wake_word_mode = True
-        else:
+        try:
+            if WAKE_WORD_ENGINE == "openwakeword":
+                from backend.wake_word.listener import OpenWakeWordListener
+                logger.info("Setting up OpenWakeWord wake word listener...")
+                self.listener = OpenWakeWordListener(
+                    on_trigger=self._on_trigger,
+                )
+                self.wake_word_mode = True
+            elif WAKE_WORD_ENGINE == "porcupine":
+                from backend.wake_word.listener import PorcupineListener
+                logger.info("Setting up Porcupine wake word listener...")
+                self.listener = PorcupineListener(
+                    on_trigger=self._on_trigger,
+                )
+                self.wake_word_mode = True
+            else:
+                raise ValueError("Wake word engine not enabled.")
+        except Exception as e:
             from backend.wake_word.listener import HotkeyListener
-            logger.info(f"Setting up hotkey listener [{TRIGGER_HOTKEY.upper()}]...")
+            logger.warning(f"Wake word setup failed ({e}). Falling back to hotkey [{TRIGGER_HOTKEY.upper()}]...")
             self.listener = HotkeyListener(
                 hotkey=TRIGGER_HOTKEY,
                 on_trigger=self._on_trigger,
             )
+            self.wake_word_mode = False
 
         logger.info("All systems online.")
 

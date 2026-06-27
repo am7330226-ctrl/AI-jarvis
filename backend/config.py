@@ -5,11 +5,16 @@ Edit this file to set your API keys and preferences before running.
 """
 
 import os
+# pyrefly: ignore [missing-import]
+from dotenv import load_dotenv
+
+# Load environment variables from .env file (safely ignored by Git)
+load_dotenv()
 
 # ─── API Keys ─────────────────────────────────────────────────────────────────
 # You can also set these as environment variables for better security.
 GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
-GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_HERE")
 
 # Optional — only needed if you use ElevenLabs TTS instead of edge-tts
 ELEVENLABS_API_KEY: str = os.environ.get("ELEVENLABS_API_KEY", "")
@@ -33,13 +38,14 @@ Language & Style:
 - Your tone should be calm, efficient, respectful, and slightly formal with a hint of dry wit (like a British butler who speaks Hinglish).
 
 Your capabilities (via tools):
+- You MUST invoke the corresponding tool function to perform any action. DO NOT just say you are doing it; ACTUALLY call the function.
 - You can open, close, and switch between applications.
 - You can control system volume, media playback, screen brightness, and power state.
 - You can type text and press keyboard shortcuts on behalf of the user.
-- You can execute safe, whitelisted shell commands.
+- You can execute safe, whitelisted shell commands (use execute_command, not shell_execute).
 
 Safety rules:
-- NEVER execute a shell command without using the shell_execute tool — never embed raw commands in text.
+- NEVER execute a shell command without using the execute_command tool — never embed raw commands in text.
 - For any destructive or irreversible action (delete files, shutdown, restart), 
   ALWAYS use the require_confirmation tool first.
 - If you are uncertain about an action, ask for clarification before proceeding.

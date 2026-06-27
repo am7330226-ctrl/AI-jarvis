@@ -50,12 +50,14 @@ APP_ALIASES: dict = {
 }
 
 
+import os
+
 def open_application(name: str) -> str:
     """
-    Launch an application by name.
+    Launch an application, file, folder, or document by name or path.
     
     Args:
-        name: Friendly name or executable name of the app.
+        name: Friendly name, executable name, or absolute file path.
     
     Returns:
         Status message string.
@@ -63,18 +65,23 @@ def open_application(name: str) -> str:
     name_lower = name.lower().strip()
     executable = APP_ALIASES.get(name_lower, name)
 
-    logger.info(f"Opening application: {name!r} -> {executable!r}")
+    logger.info(f"Opening application/file: {name!r} -> {executable!r}")
 
     try:
-        if executable.startswith("ms-"):
-            # Handle Windows URI protocol links (ms-settings:, ms-clock:, etc.)
-            subprocess.Popen(["cmd", "/c", "start", "", executable], shell=False)
+        if hasattr(os, 'startfile'):
+            # os.startfile acts exactly like double-clicking a file in Windows.
+            # It opens executables, files with default apps, and URLs.
+            os.startfile(executable)
         else:
-            subprocess.Popen(executable, shell=True)
+            if executable.startswith("ms-"):
+                # Handle Windows URI protocol links (ms-settings:, ms-clock:, etc.)
+                subprocess.Popen(["cmd", "/c", "start", "", executable], shell=False)
+            else:
+                subprocess.Popen(executable, shell=True)
         return f"Opened {name}."
     except FileNotFoundError:
-        logger.error(f"Application not found: {executable!r}")
-        return f"I couldn't find the application '{name}'. Please make sure it's installed."
+        logger.error(f"Target not found: {executable!r}")
+        return f"I couldn't find '{name}'. If it's a specific file, I might need the full path."
     except Exception as e:
         logger.error(f"Error opening {executable!r}: {e}")
         return f"Failed to open {name}: {e}"

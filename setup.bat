@@ -35,8 +35,8 @@ echo  ============================================================
 echo   Setup complete!
 echo.
 echo   NEXT STEPS:
-echo   1. Open backend\config.py
-echo   2. Replace YOUR_GEMINI_API_KEY_HERE with your actual key
+echo   1. Create a .env file or open backend\config.py
+echo   2. Set your GEMINI_API_KEY
 echo      (Get one free at: https://aistudio.google.com/apikey)
 echo   3. Run Jarvis: run_jarvis.bat
 echo  ============================================================
