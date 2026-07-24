@@ -16,7 +16,14 @@ from typing import Callable, Optional
 # pyrefly: ignore [missing-import]
 from groq import Groq, BadRequestError, RateLimitError
 
-from backend.config import GROQ_API_KEY, GROQ_MODEL, MAX_HISTORY_TURNS, JARVIS_SYSTEM_PROMPT
+from backend.config import (
+    GROQ_API_KEY,
+    GROQ_MODEL,
+    OPENROUTER_API_KEY,
+    OPENROUTER_MODEL,
+    MAX_HISTORY_TURNS,
+    JARVIS_SYSTEM_PROMPT,
+)
 from backend.tools import app_control, media_control, system_control, typing_tool
 from backend.safety.sanitizer import SafetySanitizer
 
@@ -378,7 +385,17 @@ class JarvisAgent:
     """
 
     def __init__(self, speak_fn: Callable[[str], None], listen_fn: Callable[[], str]):
-        self.client = Groq(api_key=GROQ_API_KEY)
+        if OPENROUTER_API_KEY and (not GROQ_API_KEY or OPENROUTER_API_KEY.startswith("sk-or-")):
+            logger.info("Initializing JarvisAgent with OpenRouter API client...")
+            self.client = Groq(
+                api_key=OPENROUTER_API_KEY,
+                base_url="https://openrouter.ai/api/v1"
+            )
+            self.model = OPENROUTER_MODEL
+        else:
+            self.client = Groq(api_key=GROQ_API_KEY)
+            self.model = GROQ_MODEL
+
         self.sanitizer = SafetySanitizer(speak_fn=speak_fn, listen_fn=listen_fn)
         self.tool_executor = ToolExecutor(sanitizer=self.sanitizer)
 
@@ -387,7 +404,7 @@ class JarvisAgent:
             {"role": "system", "content": JARVIS_SYSTEM_PROMPT}
         ]
 
-        logger.info(f"JarvisAgent initialized with Groq model: {GROQ_MODEL}")
+        logger.info(f"JarvisAgent initialized with model: {self.model}")
 
     # ─── XML Fallback Parser ──────────────────────────────────────────────────
 
@@ -442,7 +459,7 @@ class JarvisAgent:
         for iteration in range(MAX_ITERATIONS):
             try:
                 response = self.client.chat.completions.create(
-                    model=GROQ_MODEL,
+                    model=self.model,
                     messages=self.history,
                     tools=TOOLS,
                     tool_choice="auto",

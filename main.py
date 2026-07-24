@@ -40,13 +40,12 @@ logger = logging.getLogger("jarvis.main")
 
 # ─── Config Validation ────────────────────────────────────────────────────────
 def _validate_config():
-    from backend.config import GROQ_API_KEY
-    if not GROQ_API_KEY or not GROQ_API_KEY.startswith("gsk_"):
+    from backend.config import GROQ_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY
+    if not (GROQ_API_KEY or GEMINI_API_KEY or OPENROUTER_API_KEY):
         logger.critical(
             "\n" + "=" * 60 +
-            "\n  ERROR: GROQ_API_KEY is not set or invalid!\n"
-            "  Edit backend/config.py and set your Groq API key.\n"
-            "  Get a free key at: https://console.groq.com/keys\n" +
+            "\n  ERROR: No LLM API key configured!\n"
+            "  Edit backend/config.py and set your API key (GROQ_API_KEY, OPENROUTER_API_KEY, or GEMINI_API_KEY).\n" +
             "=" * 60
         )
         sys.exit(1)
@@ -87,21 +86,37 @@ class Jarvis:
 
         # Initialize the configured trigger listener
         self.wake_word_mode = False
+        listener_initialized = False
+
         if WAKE_WORD_ENGINE == "openwakeword":
-            from backend.wake_word.listener import OpenWakeWordListener
-            logger.info("Setting up OpenWakeWord wake word listener...")
-            self.listener = OpenWakeWordListener(
-                on_trigger=self._on_trigger,
-            )
-            self.wake_word_mode = True
+            try:
+                # pyrefly: ignore [missing-import]
+                import openwakeword
+                from backend.wake_word.listener import OpenWakeWordListener
+                logger.info("Setting up OpenWakeWord wake word listener...")
+                self.listener = OpenWakeWordListener(
+                    on_trigger=self._on_trigger,
+                )
+                self.wake_word_mode = True
+                listener_initialized = True
+            except ImportError:
+                logger.warning("openwakeword is not installed. Falling back to hotkey listener...")
+
         elif WAKE_WORD_ENGINE == "porcupine":
-            from backend.wake_word.listener import PorcupineListener
-            logger.info("Setting up Porcupine wake word listener...")
-            self.listener = PorcupineListener(
-                on_trigger=self._on_trigger,
-            )
-            self.wake_word_mode = True
-        else:
+            try:
+                # pyrefly: ignore [missing-import]
+                import pvporcupine
+                from backend.wake_word.listener import PorcupineListener
+                logger.info("Setting up Porcupine wake word listener...")
+                self.listener = PorcupineListener(
+                    on_trigger=self._on_trigger,
+                )
+                self.wake_word_mode = True
+                listener_initialized = True
+            except ImportError:
+                logger.warning("pvporcupine is not installed. Falling back to hotkey listener...")
+
+        if not listener_initialized:
             from backend.wake_word.listener import HotkeyListener
             logger.info(f"Setting up hotkey listener [{TRIGGER_HOTKEY.upper()}]...")
             self.listener = HotkeyListener(

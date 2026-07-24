@@ -14,7 +14,8 @@ load_dotenv()
 # ─── API Keys ─────────────────────────────────────────────────────────────────
 # You can also set these as environment variables for better security.
 GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
-GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_HERE")
+GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", "")
+OPENROUTER_API_KEY: str = os.environ.get("OPENROUTER_API_KEY", "")
 
 # Optional — only needed if you use ElevenLabs TTS instead of edge-tts
 ELEVENLABS_API_KEY: str = os.environ.get("ELEVENLABS_API_KEY", "")
@@ -23,8 +24,8 @@ ELEVENLABS_API_KEY: str = os.environ.get("ELEVENLABS_API_KEY", "")
 PORCUPINE_ACCESS_KEY: str = os.environ.get("PORCUPINE_ACCESS_KEY", "")
 
 # ─── LLM Settings ─────────────────────────────────────────────────────────────
-# llama-3.3-70b-versatile: available on Groq, XML fallback handled in agent.py
 GROQ_MODEL: str = "llama-3.3-70b-versatile"
+OPENROUTER_MODEL: str = os.environ.get("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct")
 GEMINI_MODEL: str = "gemini-2.5-flash"
 MAX_HISTORY_TURNS: int = 20  # Number of conversation turns to keep in memory
 
@@ -76,9 +77,10 @@ EDGE_TTS_PITCH: str = "-5Hz"          # Slightly lower pitch for gravitas
 # Press this key to start a voice interaction (Phase 1 & 2, before wake word)
 TRIGGER_HOTKEY: str = "f9"
 
-# ─── Wake Word Settings (Phase 3) ─────────────────────────────────────────────
+# ─── Wake Word / Hotkey Settings ──────────────────────────────────────────────
 WAKE_WORDS: list = ["jarvis", "hey jarvis"]
-WAKE_WORD_ENGINE: str = "openwakeword"   # "porcupine" or "openwakeword"
+# Options: "hotkey" (press F9 to speak, recommended), "openwakeword", or "porcupine"
+WAKE_WORD_ENGINE: str = "hotkey"
 
 # ─── Dashboard / WebSocket ────────────────────────────────────────────────────
 WEBSOCKET_HOST: str = "localhost"
