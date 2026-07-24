@@ -15,6 +15,8 @@ from typing import Callable, Optional
 
 # pyrefly: ignore [missing-import]
 from groq import Groq, BadRequestError, RateLimitError
+# pyrefly: ignore [missing-import]
+from openai import OpenAI
 
 from backend.config import (
     GROQ_API_KEY,
@@ -387,7 +389,7 @@ class JarvisAgent:
     def __init__(self, speak_fn: Callable[[str], None], listen_fn: Callable[[], str]):
         if OPENROUTER_API_KEY and (not GROQ_API_KEY or OPENROUTER_API_KEY.startswith("sk-or-")):
             logger.info("Initializing JarvisAgent with OpenRouter API client...")
-            self.client = Groq(
+            self.client = OpenAI(
                 api_key=OPENROUTER_API_KEY,
                 base_url="https://openrouter.ai/api/v1"
             )
