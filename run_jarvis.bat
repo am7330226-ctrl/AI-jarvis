@@ -22,7 +22,7 @@ set HF_TOKEN=""
 
 :: Run Jarvis — must be launched as Administrator for some features
 :: (keyboard hotkey listener requires elevated privileges on some systems)
-python -m backend.main
+python main.py
 
 if errorlevel 1 (
     echo.

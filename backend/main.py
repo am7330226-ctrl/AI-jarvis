@@ -13,10 +13,11 @@ import sys
 import time
 import threading
 import psutil
+from typing import Any
 
-import keyboard
+import keyboard  # type: ignore
 
-from backend.config import GEMINI_API_KEY, TRIGGER_HOTKEY, WEBSOCKET_HOST, WEBSOCKET_PORT, WAKE_WORD_ENGINE
+from backend.config import GEMINI_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY, TRIGGER_HOTKEY, WEBSOCKET_HOST, WEBSOCKET_PORT, WAKE_WORD_ENGINE
 from backend.stt.whisper_stt import WhisperSTT
 from backend.tts.edge_tts_engine import EdgeTTSEngine
 from backend.llm.gemini_brain import GeminiBrain
@@ -40,8 +41,8 @@ class Jarvis:
 
     def __init__(self):
         # Validate API key
-        if not GEMINI_API_KEY or GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
-            logger.error("Please set your GEMINI_API_KEY in backend/config.py or .env before running.")
+        if not (GEMINI_API_KEY or GROQ_API_KEY or OPENROUTER_API_KEY):
+            logger.error("Please set GEMINI_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY in .env before running.")
             sys.exit(1)
 
         logger.info("Initializing JARVIS systems...")
@@ -67,6 +68,7 @@ class Jarvis:
 
         # Initialize the configured trigger listener
         self.wake_word_mode = False
+        self.listener: Any = None
         try:
             if WAKE_WORD_ENGINE == "openwakeword":
                 from backend.wake_word.listener import OpenWakeWordListener
