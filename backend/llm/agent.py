@@ -11,7 +11,7 @@ Uses Groq's ultra-fast inference API with LLaMA 3.3 70B for:
 import json
 import logging
 import re
-from typing import Callable, Optional
+from typing import Any, Callable, Optional, Union, cast
 
 # pyrefly: ignore [missing-import]
 from groq import Groq, BadRequestError, RateLimitError
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 # ─── Tool Definitions (OpenAI-compatible JSON Schema) ─────────────────────────
 
-TOOLS = [
+TOOLS: Any = [
     # ── Application Control ──────────────────────────────────────────────────
     {
         "type": "function",
@@ -372,7 +372,7 @@ class ToolExecutor:
             logger.info(f"Executing: {name}({args})")
             result = handler(args)
             logger.info(f"Result: {result!r}")
-            return str(result)
+            return result
         except Exception as e:
             logger.error(f"Tool error [{name}]: {e}", exc_info=True)
             return f"Error executing {name}: {e}"
@@ -387,6 +387,7 @@ class JarvisAgent:
     """
 
     def __init__(self, speak_fn: Callable[[str], None], listen_fn: Callable[[], str]):
+        self.client: Union[Groq, OpenAI]
         if OPENROUTER_API_KEY and (not GROQ_API_KEY or OPENROUTER_API_KEY.startswith("sk-or-")):
             logger.info("Initializing JarvisAgent with OpenRouter API client...")
             self.client = OpenAI(
@@ -460,15 +461,16 @@ class JarvisAgent:
 
         for iteration in range(MAX_ITERATIONS):
             try:
-                response = self.client.chat.completions.create(
+                response = cast(Any, self.client.chat.completions.create(
                     model=self.model,
-                    messages=self.history,
-                    tools=TOOLS,
+                    messages=cast(Any, self.history),
+                    tools=cast(Any, TOOLS),
                     tool_choice="auto",
                     parallel_tool_calls=False,
                     temperature=0.3,
                     max_tokens=512,
-                )
+                    stream=False,
+                ))
             except RateLimitError as e:
                 logger.warning(f"Groq Rate Limit exceeded: {e}")
                 self.history.pop()  # Remove failed user message

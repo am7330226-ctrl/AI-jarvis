@@ -8,6 +8,8 @@ import subprocess
 import logging
 import psutil
 
+from typing import Any
+
 try:
     import win32gui
     import win32con
@@ -15,6 +17,9 @@ try:
     HAS_WIN32 = True
 except ImportError:
     HAS_WIN32 = False
+    win32gui: Any = None
+    win32con: Any = None
+    win32process: Any = None
     logging.warning("pywin32 not available — window switching will be limited.")
 
 logger = logging.getLogger(__name__)

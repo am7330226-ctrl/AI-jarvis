@@ -6,26 +6,30 @@ Uses pycaw for precise volume control via Windows Core Audio API.
 """
 
 import logging
-import keyboard
+import keyboard  # type: ignore
 
 logger = logging.getLogger(__name__)
 
+from typing import Any
+
 # Try to import pycaw for proper Windows volume control
 try:
-    from ctypes import cast, POINTER
-    from comtypes import CLSCTX_ALL
-    from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+    from pycaw.pycaw import AudioUtilities
     HAS_PYCAW = True
 except ImportError:
     HAS_PYCAW = False
+    AudioUtilities: Any = None
     logger.warning("pycaw not available — volume control will use keyboard simulation.")
 
 
-def _get_volume_interface():
+def _get_volume_interface() -> Any:
     """Get the Windows Core Audio volume interface."""
+    if not HAS_PYCAW or AudioUtilities is None:
+        return None
     devices = AudioUtilities.GetSpeakers()
-    interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-    return cast(interface, POINTER(IAudioEndpointVolume))
+    if devices is None:
+        return None
+    return devices.EndpointVolume
 
 
 def set_volume(level: int) -> str:
@@ -38,15 +42,16 @@ def set_volume(level: int) -> str:
     Returns:
         Status message.
     """
-    level = max(0, min(100, int(level)))
+    level = max(0, min(100, level))
     
     if HAS_PYCAW:
         try:
             volume = _get_volume_interface()
-            # pycaw uses scalar 0.0 to 1.0
-            volume.SetMasterVolumeLevelScalar(level / 100.0, None)
-            logger.info(f"Volume set to {level}%")
-            return f"Volume set to {level} percent."
+            if volume is not None:
+                # pycaw uses scalar 0.0 to 1.0
+                volume.SetMasterVolumeLevelScalar(level / 100.0, None)
+                logger.info(f"Volume set to {level}%")
+                return f"Volume set to {level} percent."
         except Exception as e:
             logger.error(f"pycaw volume error: {e}")
 
@@ -61,10 +66,11 @@ def get_volume() -> str:
     if HAS_PYCAW:
         try:
             volume = _get_volume_interface()
-            level = int(volume.GetMasterVolumeLevelScalar() * 100)
-            muted = volume.GetMute()
-            mute_str = " (muted)" if muted else ""
-            return f"Current volume is {level} percent{mute_str}."
+            if volume is not None:
+                level = int(volume.GetMasterVolumeLevelScalar() * 100)
+                muted = volume.GetMute()
+                mute_str = " (muted)" if muted else ""
+                return f"Current volume is {level} percent{mute_str}."
         except Exception as e:
             logger.error(f"pycaw get volume error: {e}")
     return "Unable to retrieve volume level."
@@ -75,11 +81,12 @@ def mute_toggle() -> str:
     if HAS_PYCAW:
         try:
             volume = _get_volume_interface()
-            current_mute = volume.GetMute()
-            volume.SetMute(not current_mute, None)
-            state = "muted" if not current_mute else "unmuted"
-            logger.info(f"System audio {state}.")
-            return f"System audio {state}."
+            if volume is not None:
+                current_mute = volume.GetMute()
+                volume.SetMute(not current_mute, None)
+                state = "muted" if not current_mute else "unmuted"
+                logger.info(f"System audio {state}.")
+                return f"System audio {state}."
         except Exception as e:
             logger.error(f"pycaw mute error: {e}")
 
@@ -93,11 +100,12 @@ def volume_up(amount: int = 10) -> str:
     if HAS_PYCAW:
         try:
             volume = _get_volume_interface()
-            current = volume.GetMasterVolumeLevelScalar() * 100
-            new_level = min(100, current + amount)
-            volume.SetMasterVolumeLevelScalar(new_level / 100.0, None)
-            logger.info(f"Volume increased to {new_level:.0f}%")
-            return f"Volume increased to {new_level:.0f} percent."
+            if volume is not None:
+                current = volume.GetMasterVolumeLevelScalar() * 100
+                new_level = min(100, current + amount)
+                volume.SetMasterVolumeLevelScalar(new_level / 100.0, None)
+                logger.info(f"Volume increased to {new_level:.0f}%")
+                return f"Volume increased to {new_level:.0f} percent."
         except Exception as e:
             logger.error(f"Volume up error: {e}")
 
@@ -110,11 +118,12 @@ def volume_down(amount: int = 10) -> str:
     if HAS_PYCAW:
         try:
             volume = _get_volume_interface()
-            current = volume.GetMasterVolumeLevelScalar() * 100
-            new_level = max(0, current - amount)
-            volume.SetMasterVolumeLevelScalar(new_level / 100.0, None)
-            logger.info(f"Volume decreased to {new_level:.0f}%")
-            return f"Volume decreased to {new_level:.0f} percent."
+            if volume is not None:
+                current = volume.GetMasterVolumeLevelScalar() * 100
+                new_level = max(0, current - amount)
+                volume.SetMasterVolumeLevelScalar(new_level / 100.0, None)
+                logger.info(f"Volume decreased to {new_level:.0f}%")
+                return f"Volume decreased to {new_level:.0f} percent."
         except Exception as e:
             logger.error(f"Volume down error: {e}")
 

@@ -10,7 +10,7 @@ import json
 import logging
 import threading
 from datetime import datetime
-from typing import Set
+from typing import Optional, Set
 
 # pyrefly: ignore [missing-import]
 import uvicorn
@@ -70,7 +70,7 @@ manager = ConnectionManager()
 
 # ─── Singleton broadcaster (used from sync code) ──────────────────────────────
 
-_event_loop: asyncio.AbstractEventLoop = None
+_event_loop: Optional[asyncio.AbstractEventLoop] = None
 
 
 def set_event_loop(loop: asyncio.AbstractEventLoop):

@@ -8,6 +8,8 @@ import ctypes
 import subprocess
 import logging
 
+from typing import Any
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -15,14 +17,17 @@ try:
     HAS_SBC = True
 except ImportError:
     HAS_SBC = False
+    sbc: Any = None
     logger.warning("screen-brightness-control not available.")
 
 
 def lock_screen() -> str:
     """Lock the Windows workstation."""
     logger.info("Locking screen.")
-    ctypes.windll.user32.LockWorkStation()
-    return "Screen locked."
+    if hasattr(ctypes, "windll"):
+        ctypes.windll.user32.LockWorkStation()  # type: ignore
+        return "Screen locked."
+    return "Lock screen is only supported on Windows."
 
 
 def sleep_system() -> str:
@@ -66,7 +71,7 @@ def set_brightness(level: int) -> str:
     Returns:
         Status message.
     """
-    level = max(0, min(100, int(level)))
+    level = max(0, min(100, level))
 
     if HAS_SBC:
         try:

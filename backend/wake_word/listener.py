@@ -14,7 +14,7 @@ Design:
 import logging
 import threading
 import time
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class HotkeyListener:
     def _listen_loop(self):
         """Background loop that polls for the hotkey."""
         try:
-            import keyboard  # imported here to allow graceful ImportError handling
+            import keyboard  # pyright: ignore[reportMissingTypeStubs] # type: ignore  # imported here to allow graceful ImportError handling
         except ImportError:
             logger.error("'keyboard' package not installed. Run: pip install keyboard")
             return
@@ -159,8 +159,8 @@ class PorcupineListener:
             ) as stream:
                 while not self._stop_event.is_set():
                     pcm, _ = stream.read(frame_length)
-                    pcm = pcm.flatten().tolist()
-                    result = porcupine.process(pcm)
+                    pcm_list: list[int] = [int(x) for x in pcm.flatten().tolist()]
+                    result = porcupine.process(pcm_list)
                     if result >= 0:
                         logger.info("Wake word 'Jarvis' detected!")
                         try:
@@ -257,10 +257,10 @@ class OpenWakeWordListener:
                     pcm = audio_chunk.flatten()
                     
                     # Get prediction scores
-                    prediction = model.predict(pcm)
+                    prediction: Any = model.predict(pcm)
                     
                     # Get score for our model
-                    score = prediction.get(model_key, 0.0)
+                    score = prediction.get(model_key, 0.0) if isinstance(prediction, dict) else 0.0
                     if score >= self.threshold:
                         logger.info(f"Wake word detected! (Score: {score:.2f})")
                         try:
