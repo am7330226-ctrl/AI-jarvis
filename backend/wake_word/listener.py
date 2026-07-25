@@ -225,6 +225,13 @@ class OpenWakeWordListener:
         import numpy as np
 
         try:
+            # Ensure models (hey_jarvis, embedding_model, melspectrogram) are downloaded
+            try:
+                import openwakeword.utils
+                openwakeword.utils.download_models(["hey_jarvis"])
+            except Exception as download_err:
+                logger.debug(f"OpenWakeWord auto-download check: {download_err}")
+
             # Initialize model with ONNX engine
             model = Model(
                 wakeword_models=["hey_jarvis"],

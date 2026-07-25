@@ -80,7 +80,7 @@ TRIGGER_HOTKEY: str = "f9"
 # ─── Wake Word / Hotkey Settings ──────────────────────────────────────────────
 WAKE_WORDS: list = ["jarvis", "hey jarvis"]
 # Options: "hotkey" (press F9 to speak, recommended), "openwakeword", or "porcupine"
-WAKE_WORD_ENGINE: str = "hotkey"
+WAKE_WORD_ENGINE: str = os.environ.get("WAKE_WORD_ENGINE", "hotkey")
 
 # ─── Dashboard / WebSocket ────────────────────────────────────────────────────
 WEBSOCKET_HOST: str = "localhost"
