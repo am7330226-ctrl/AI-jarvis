@@ -7,6 +7,8 @@
         "main.py"
     ],
     "extraPaths": [
-        "venv/Lib/site-packages"
+        "venv/Lib/site-packages",
+        "venv/Lib/site-packages/win32",
+        "venv/Lib/site-packages/win32/lib"
     ]
 }

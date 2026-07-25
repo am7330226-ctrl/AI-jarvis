@@ -21,7 +21,7 @@ WHITELISTED_PREFIXES: list = [
     "mkdir", "new-item",
     "copy", "cp", "move", "mv",
     "rename-item",
-    "start-process",
+    "start", "start-process",
     "python", "pip",
     "git status", "git log", "git diff",
     "npm", "node",

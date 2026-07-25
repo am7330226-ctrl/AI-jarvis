@@ -51,6 +51,58 @@ APP_ALIASES: dict = {
 
 
 import os
+import shutil
+import webbrowser
+
+# Common installation paths for applications on Windows
+COMMON_APP_SEARCH_PATHS: dict = {
+    "chrome.exe": [
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
+    ],
+    "msedge.exe": [
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+    ],
+    "firefox.exe": [
+        r"C:\Program Files\Mozilla Firefox\firefox.exe",
+        r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe",
+    ],
+    "brave.exe": [
+        r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe"),
+    ],
+    "code.exe": [
+        os.path.expandvars(r"%LOCALAPPDATA%\Programs\Microsoft VS Code\Code.exe"),
+        r"C:\Program Files\Microsoft VS Code\Code.exe",
+    ],
+    "spotify.exe": [
+        os.path.expandvars(r"%APPDATA%\Spotify\Spotify.exe"),
+    ],
+    "discord.exe": [
+        os.path.expandvars(r"%LOCALAPPDATA%\Discord\Update.exe --processStart Discord.exe"),
+    ],
+}
+
+
+def _find_executable_path(executable: str) -> str | None:
+    """Find absolute path to an executable using PATH or common install directories."""
+    # Check if executable is directly in PATH
+    path_in_env = shutil.which(executable)
+    if path_in_env:
+        return path_in_env
+
+    # Check known common paths
+    exe_lower = executable.lower()
+    if exe_lower in COMMON_APP_SEARCH_PATHS:
+        for candidate in COMMON_APP_SEARCH_PATHS[exe_lower]:
+            clean_path = candidate.split(" --")[0]  # strip flags if present
+            if os.path.exists(clean_path):
+                return candidate
+
+    return None
+
 
 def open_application(name: str) -> str:
     """
@@ -67,24 +119,50 @@ def open_application(name: str) -> str:
 
     logger.info(f"Opening application/file: {name!r} -> {executable!r}")
 
+    # Stage 1: Check if explicit file/folder path or URI protocol
+    if executable.startswith("ms-"):
+        try:
+            subprocess.Popen(["cmd", "/c", "start", "", executable], shell=False)
+            return f"Opened {name}."
+        except Exception as e:
+            logger.error(f"Error opening URI protocol {executable!r}: {e}")
+
+    # Stage 2: Try resolved absolute path if available
+    resolved_path = _find_executable_path(executable)
+    target_to_launch = resolved_path if resolved_path else executable
+
+    # Stage 3: Attempt launching via os.startfile
+    if hasattr(os, 'startfile'):
+        try:
+            os.startfile(target_to_launch)
+            return f"Opened {name}."
+        except FileNotFoundError:
+            logger.debug(f"os.startfile failed for {target_to_launch!r}, trying shell start...")
+        except PermissionError:
+            logger.error(f"Permission denied when launching {target_to_launch!r}")
+            return f"Permission denied while trying to open {name}. Try running Jarvis as Administrator."
+        except Exception as e:
+            logger.warning(f"os.startfile exception ({e}), falling back to cmd start...")
+
+    # Stage 4: Attempt Windows shell command `cmd /c start ""`
     try:
-        if hasattr(os, 'startfile'):
-            # os.startfile acts exactly like double-clicking a file in Windows.
-            # It opens executables, files with default apps, and URLs.
-            os.startfile(executable)
-        else:
-            if executable.startswith("ms-"):
-                # Handle Windows URI protocol links (ms-settings:, ms-clock:, etc.)
-                subprocess.Popen(["cmd", "/c", "start", "", executable], shell=False)
-            else:
-                subprocess.Popen(executable, shell=True)
+        subprocess.Popen(f'start "" "{executable}"', shell=True)
         return f"Opened {name}."
-    except FileNotFoundError:
-        logger.error(f"Target not found: {executable!r}")
-        return f"I couldn't find '{name}'. If it's a specific file, I might need the full path."
+    except PermissionError:
+        return f"Permission denied while trying to open {name}. Try running Jarvis as Administrator."
     except Exception as e:
-        logger.error(f"Error opening {executable!r}: {e}")
-        return f"Failed to open {name}: {e}"
+        logger.error(f"Shell start failed for {executable!r}: {e}")
+
+    # Stage 5: Browser fallback for web browsers
+    if name_lower in ["chrome", "google chrome", "browser", "firefox", "edge", "brave"]:
+        try:
+            webbrowser.open("https://www.google.com")
+            return f"Opened browser for {name}."
+        except Exception as e:
+            logger.error(f"Webbrowser fallback failed: {e}")
+
+    return f"I couldn't find '{name}'. If it's a custom app or file, please provide the full path."
+
 
 
 def close_application(name: str) -> str:

@@ -161,6 +161,11 @@ TOOL_DECLARATIONS = [
         description="Restart the computer. REQUIRES USER CONFIRMATION.",
         parameters={"type": "object", "properties": {}},
     ),
+    FunctionDeclaration(
+        name="cancel_shutdown",
+        description="Cancel a pending system shutdown or restart.",
+        parameters={"type": "object", "properties": {}},
+    ),
     # ── Typing / Keyboard ──
     FunctionDeclaration(
         name="type_text",
@@ -187,6 +192,22 @@ TOOL_DECLARATIONS = [
             },
             "required": ["keys"],
         },
+    ),
+    FunctionDeclaration(
+        name="press_key",
+        description="Press a single keyboard key (e.g., 'enter', 'escape', 'tab', 'f5').",
+        parameters={
+            "type": "object",
+            "properties": {
+                "key": {"type": "string", "description": "Key name to press."}
+            },
+            "required": ["key"],
+        },
+    ),
+    FunctionDeclaration(
+        name="show_desktop",
+        description="Minimize all windows and show the Windows desktop.",
+        parameters={"type": "object", "properties": {}},
     ),
     FunctionDeclaration(
         name="take_screenshot",
@@ -243,6 +264,18 @@ TOOL_DECLARATIONS = [
                 "command": {"type": "string", "description": "The shell command to execute."}
             },
             "required": ["command"],
+        },
+    ),
+    # ── Safety ──
+    FunctionDeclaration(
+        name="require_confirmation",
+        description="Ask the user to verbally confirm a dangerous or irreversible action.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "action_description": {"type": "string", "description": "Description of the action to confirm."}
+            },
+            "required": ["action_description"],
         },
     ),
 ]

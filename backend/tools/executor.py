@@ -51,9 +51,12 @@ class ToolExecutor:
             "sleep_system": lambda args: system_control.sleep_system(),
             "shutdown_system": lambda args: system_control.shutdown_system(),
             "restart_system": lambda args: system_control.restart_system(),
+            "cancel_shutdown": lambda args: system_control.cancel_shutdown(),
             # Keyboard
             "type_text": lambda args: typing_tool.type_text(args["text"]),
             "press_hotkey": lambda args: typing_tool.press_hotkey(*args["keys"]),
+            "press_key": lambda args: typing_tool.press_key(args["key"]),
+            "show_desktop": lambda args: typing_tool.show_desktop(),
             "take_screenshot": lambda args: typing_tool.take_screenshot(),
             # Web
             "search_web": lambda args: web_search.search_web(args["query"], args.get("engine", "duckduckgo")),
@@ -62,6 +65,8 @@ class ToolExecutor:
             "get_time_and_date": lambda args: web_search.get_time_and_date(),
             # Shell
             "execute_command": lambda args: self._safe_execute_command(args["command"]),
+            # Safety
+            "require_confirmation": lambda args: str(self.sanitizer.require_confirmation(args["action_description"])),
         }
 
     def execute(self, tool_name: str, args: dict) -> str:
